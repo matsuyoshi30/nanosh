@@ -1,9 +1,9 @@
-use ctrlc;
+use ctrlc::set_handler;
 use nix::{
     sys::wait::waitpid,
     unistd::{fork, write, ForkResult},
 };
-use shlex;
+use shlex::split;
 use std::io::{stdin, stdout, Write};
 use std::process;
 
@@ -27,7 +27,7 @@ impl Executor for EchoCommand {
 }
 
 fn main() {
-    ctrlc::set_handler(move || {
+    set_handler(move || {
         println!();
         println!("nanosh is finishing...");
         process::exit(0);
@@ -42,7 +42,7 @@ fn main() {
         let mut input = String::new();
         stdin().read_line(&mut input).expect("no given input");
 
-        if let Some(mut result) = shlex::split(&input) {
+        if let Some(mut result) = split(&input) {
             let cmd = result.remove(0);
             match unsafe { fork() } {
                 Ok(ForkResult::Parent { child, .. }) => {

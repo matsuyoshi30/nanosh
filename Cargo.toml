@@ -4,8 +4,6 @@ version = "0.1.0"
 authors = ["matsuyoshi30 <sfbgwm30@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 ctrlc = { version = "3.0", features = ["termination"] }
 shlex = "0.1.0"
