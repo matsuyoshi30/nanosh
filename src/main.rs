@@ -53,7 +53,7 @@ fn main() {
                 }
             }
         } else {
-            println!("unknown shell commands");
+            println!("unknown shell input");
         }
     }
 }
