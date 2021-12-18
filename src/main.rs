@@ -1,4 +1,8 @@
 use ctrlc;
+use nix::{
+    sys::wait::waitpid,
+    unistd::{fork, write, ForkResult},
+};
 use shlex;
 use std::io::{stdin, stdout, Write};
 use std::process;
@@ -14,10 +18,11 @@ struct EchoCommand {
 impl Executor for EchoCommand {
     fn execute(&self) {
         for i in &self.args {
-            print!("{}", i);
-            print!(" ");
+            write(libc::STDOUT_FILENO, i.as_bytes()).ok();
+            write(libc::STDOUT_FILENO, " ".as_bytes()).ok();
         }
-        println!();
+        write(libc::STDOUT_FILENO, "\n".as_bytes()).ok();
+        unsafe { libc::_exit(0) };
     }
 }
 
@@ -39,18 +44,25 @@ fn main() {
 
         if let Some(mut result) = shlex::split(&input) {
             let cmd = result.remove(0);
-            match cmd.as_ref() {
-                "echo" => {
-                    let mut arguments = Vec::new();
-                    for i in result {
-                        arguments.push(i);
+            match unsafe { fork() } {
+                Ok(ForkResult::Parent { child, .. }) => {
+                    waitpid(child, None).unwrap();
+                }
+                Ok(ForkResult::Child) => match cmd.as_ref() {
+                    "echo" => {
+                        let mut arguments = Vec::new();
+                        for i in result {
+                            arguments.push(i);
+                        }
+                        let cmd = EchoCommand { args: arguments };
+                        cmd.execute();
                     }
-                    let cmd = EchoCommand { args: arguments };
-                    cmd.execute();
-                }
-                _ => {
-                    println!("unknown command");
-                }
+                    _ => {
+                        println!("unknown command");
+                        unsafe { libc::_exit(0) };
+                    }
+                },
+                Err(_) => println!("process fork failed"),
             }
         } else {
             println!("unknown shell input");
