@@ -1,4 +1,5 @@
 use ctrlc;
+use shlex;
 use std::io::{stdin, stdout, Write};
 use std::process;
 
@@ -17,6 +18,11 @@ fn main() {
 
         let mut input = String::new();
         stdin().read_line(&mut input).expect("no given input");
-        println!("{}", input);
+
+        if let Some(result) = shlex::split(&input) {
+            println!("{:?}", result);
+        } else {
+            println!("unknown shell commands");
+        }
     }
 }

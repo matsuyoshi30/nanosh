@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 ctrlc = { version = "3.0", features = ["termination"] }
+shlex = "0.1.0"
