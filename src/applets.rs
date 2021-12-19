@@ -1,3 +1,4 @@
+pub(crate) mod cd;
 pub(crate) mod echo;
 pub(crate) mod export;
 pub(crate) mod ls;

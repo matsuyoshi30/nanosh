@@ -37,6 +37,10 @@ impl Shell {
 
     fn run(&mut self, cmd: String, args: Vec<String>) {
         match cmd.as_ref() {
+            "cd" => {
+                let cmd = applets::cd::CdCommand { arg: &args[0] };
+                cmd.execute(self);
+            }
             "echo" => {
                 let cmd = applets::echo::EchoCommand { args: args };
                 cmd.execute(self);
