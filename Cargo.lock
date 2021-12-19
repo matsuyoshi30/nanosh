@@ -56,8 +56,6 @@ name = "nanosh"
 version = "0.1.0"
 dependencies = [
  "ctrlc",
- "libc",
- "nix",
  "shlex",
 ]
 

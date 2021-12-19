@@ -1,8 +1,4 @@
 use ctrlc::set_handler;
-use nix::{
-    sys::wait::waitpid,
-    unistd::{fork, write, ForkResult},
-};
 use shlex::split;
 use std::collections::HashMap;
 use std::env;
@@ -52,9 +48,14 @@ impl Shell {
                 };
                 cmd.execute(self);
             }
-            _ => {
-                println!("unknown command");
-            }
+            cmd => match process::Command::new(cmd).args(args).spawn() {
+                Ok(res) => {
+                    println!("{:?}", res);
+                }
+                Err(err) => {
+                    println!("failed to execute command: {:?}", err);
+                }
+            },
         }
     }
 }
@@ -70,10 +71,10 @@ struct EchoCommand {
 impl Executor for EchoCommand {
     fn execute(&self, _: &mut Shell) {
         for i in &self.args {
-            write(libc::STDOUT_FILENO, i.as_bytes()).ok();
-            write(libc::STDOUT_FILENO, " ".as_bytes()).ok();
+            print!("{}", i);
+            print!(" ");
         }
-        write(libc::STDOUT_FILENO, "\n".as_bytes()).ok();
+        println!();
     }
 }
 
@@ -96,8 +97,7 @@ impl Executor for ExportCommand {
                 } else {
                     let kv: Vec<&str> = arg.split("=").collect();
                     if kv.len() != 2 {
-                        write(libc::STDERR_FILENO, "invalid argument\n".as_bytes()).ok();
-                        unsafe { libc::_exit(1) };
+                        println!("invalid argument");
                     } else {
                         shell.set_env(kv[0].to_string(), kv[1].to_string());
                     }
@@ -131,16 +131,7 @@ fn main() {
 
         if let Some(mut result) = split(&input) {
             let cmd = result.remove(0);
-            match unsafe { fork() } {
-                Ok(ForkResult::Parent { child, .. }) => {
-                    waitpid(child, None).unwrap();
-                }
-                Ok(ForkResult::Child) => {
-                    shell.run(cmd, result);
-                    unsafe { libc::_exit(0) };
-                }
-                Err(_) => println!("process fork failed"),
-            }
+            shell.run(cmd, result);
         } else {
             println!("unknown shell input");
         }
