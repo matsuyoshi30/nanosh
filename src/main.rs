@@ -9,6 +9,28 @@ use std::env;
 use std::io::{stdin, stdout, Write};
 use std::process;
 
+#[warn(dead_code)]
+struct Shell {
+    envs: HashMap<String, String>,
+}
+
+impl Shell {
+    fn new(envs: HashMap<String, String>) -> Self {
+        Shell { envs: envs }
+    }
+    fn run(&mut self, cmd: String, args: Vec<String>) {
+        match cmd.as_ref() {
+            "echo" => {
+                let cmd = EchoCommand { args: args };
+                cmd.execute();
+            }
+            _ => {
+                println!("unknown command");
+            }
+        }
+    }
+}
+
 trait Executor {
     fn execute(&self);
 }
@@ -40,6 +62,7 @@ fn main() {
     for (k, v) in env::vars() {
         envs.insert(k, v);
     }
+    let mut shell = Shell::new(envs);
 
     println!("nanosh start");
     loop {
@@ -55,20 +78,10 @@ fn main() {
                 Ok(ForkResult::Parent { child, .. }) => {
                     waitpid(child, None).unwrap();
                 }
-                Ok(ForkResult::Child) => match cmd.as_ref() {
-                    "echo" => {
-                        let mut arguments = Vec::new();
-                        for i in result {
-                            arguments.push(i);
-                        }
-                        let cmd = EchoCommand { args: arguments };
-                        cmd.execute();
-                    }
-                    _ => {
-                        println!("unknown command");
-                        unsafe { libc::_exit(0) };
-                    }
-                },
+                Ok(ForkResult::Child) => {
+                    shell.run(cmd, result);
+                    unsafe { libc::_exit(0) };
+                }
                 Err(_) => println!("process fork failed"),
             }
         } else {
