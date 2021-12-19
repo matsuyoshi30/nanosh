@@ -1,17 +1,23 @@
 use ctrlc::set_handler;
+use dirs;
 use shlex::split;
 use std::collections::HashMap;
 use std::env;
 use std::io::{stdin, stdout, Write};
+use std::path::PathBuf;
 use std::process;
 
 struct Shell {
+    current_dir: PathBuf,
     envs: HashMap<String, String>,
 }
 
 impl Shell {
-    fn new(envs: HashMap<String, String>) -> Self {
-        Shell { envs: envs }
+    fn new(wd: PathBuf, envs: HashMap<String, String>) -> Self {
+        Shell {
+            current_dir: wd,
+            envs: envs,
+        }
     }
 
     fn set_env(&mut self, key: String, val: String) {
@@ -46,6 +52,10 @@ impl Shell {
                     print: is_print,
                     args: arguments,
                 };
+                cmd.execute(self);
+            }
+            "pwd" => {
+                let cmd = PwdCommand {};
                 cmd.execute(self);
             }
             cmd => match process::Command::new(cmd).args(args).spawn() {
@@ -107,6 +117,14 @@ impl Executor for ExportCommand {
     }
 }
 
+struct PwdCommand {}
+
+impl Executor for PwdCommand {
+    fn execute(&self, shell: &mut Shell) {
+        println!("{}", shell.current_dir.to_str().unwrap());
+    }
+}
+
 fn main() {
     set_handler(move || {
         println!();
@@ -119,7 +137,8 @@ fn main() {
     for (k, v) in env::vars() {
         envs.insert(k, v);
     }
-    let mut shell = Shell::new(envs);
+    let cwd = dirs::home_dir().unwrap();
+    let mut shell = Shell::new(cwd, envs);
 
     println!("nanosh start");
     loop {
