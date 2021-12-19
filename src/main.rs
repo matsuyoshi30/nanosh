@@ -111,6 +111,9 @@ fn main() {
         stdin().read_line(&mut input).expect("no given input");
 
         if let Some(mut result) = split(&input) {
+            if result.len() == 0 {
+                continue;
+            }
             let cmd = result.remove(0);
             shell.run(cmd, result);
         } else {
