@@ -4,6 +4,8 @@ use nix::{
     unistd::{fork, write, ForkResult},
 };
 use shlex::split;
+use std::collections::HashMap;
+use std::env;
 use std::io::{stdin, stdout, Write};
 use std::process;
 
@@ -33,6 +35,11 @@ fn main() {
         process::exit(0);
     })
     .expect("Error setting Ctrl-C handler");
+
+    let mut envs = HashMap::new();
+    for (k, v) in env::vars() {
+        envs.insert(k, v);
+    }
 
     println!("nanosh start");
     loop {
