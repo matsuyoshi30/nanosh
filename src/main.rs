@@ -9,10 +9,6 @@ use std::process;
 
 mod applets;
 
-use crate::applets::echo::EchoCommand;
-use crate::applets::export::ExportCommand;
-use crate::applets::pwd::PwdCommand;
-
 trait Executor {
     fn execute(&self, shell: &mut Shell);
 }
@@ -42,7 +38,7 @@ impl Shell {
     fn run(&mut self, cmd: String, args: Vec<String>) {
         match cmd.as_ref() {
             "echo" => {
-                let cmd = EchoCommand { args: args };
+                let cmd = applets::echo::EchoCommand { args: args };
                 cmd.execute(self);
             }
             "export" => {
@@ -57,15 +53,26 @@ impl Shell {
                     }
                 }
 
-                let cmd = ExportCommand {
+                let cmd = applets::export::ExportCommand {
                     delete: is_delete,
                     print: is_print,
                     args: arguments,
                 };
                 cmd.execute(self);
             }
+            "ls" => {
+                let mut is_all = false;
+                for arg in args {
+                    match arg.as_ref() {
+                        "-a" => is_all = true,
+                        _ => {} // TODO handle arguments
+                    }
+                }
+                let cmd = applets::ls::LsCommand { all: is_all };
+                cmd.execute(self);
+            }
             "pwd" => {
-                let cmd = PwdCommand {};
+                let cmd = applets::pwd::PwdCommand {};
                 cmd.execute(self);
             }
             cmd => match process::Command::new(cmd).args(args).spawn() {
