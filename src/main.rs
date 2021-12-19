@@ -7,6 +7,16 @@ use std::io::{stdin, stdout, Write};
 use std::path::PathBuf;
 use std::process;
 
+mod applets;
+
+use crate::applets::echo::EchoCommand;
+use crate::applets::export::ExportCommand;
+use crate::applets::pwd::PwdCommand;
+
+trait Executor {
+    fn execute(&self, shell: &mut Shell);
+}
+
 struct Shell {
     current_dir: PathBuf,
     envs: HashMap<String, String>,
@@ -67,61 +77,6 @@ impl Shell {
                 }
             },
         }
-    }
-}
-
-trait Executor {
-    fn execute(&self, shell: &mut Shell);
-}
-
-struct EchoCommand {
-    args: Vec<String>,
-}
-
-impl Executor for EchoCommand {
-    fn execute(&self, _: &mut Shell) {
-        for i in &self.args {
-            print!("{}", i);
-            print!(" ");
-        }
-        println!();
-    }
-}
-
-struct ExportCommand {
-    delete: bool,
-    print: bool,
-    args: Vec<String>,
-}
-
-impl Executor for ExportCommand {
-    fn execute(&self, shell: &mut Shell) {
-        if self.print {
-            for (key, val) in &shell.envs {
-                println!("export {}={}", key, val);
-            }
-        } else {
-            for arg in &self.args {
-                if self.delete {
-                    shell.del_env(arg.to_string());
-                } else {
-                    let kv: Vec<&str> = arg.split("=").collect();
-                    if kv.len() != 2 {
-                        println!("invalid argument");
-                    } else {
-                        shell.set_env(kv[0].to_string(), kv[1].to_string());
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct PwdCommand {}
-
-impl Executor for PwdCommand {
-    fn execute(&self, shell: &mut Shell) {
-        println!("{}", shell.current_dir.to_str().unwrap());
     }
 }
 
