@@ -84,7 +84,7 @@ impl Shell {
                     child.wait().expect("failed to execute child process");
                 }
                 Err(err) => {
-                    println!("failed to execute command: {:?}", err);
+                    println!("failed to execute {:?}: {:?}", cmd, err);
                 }
             },
         }
