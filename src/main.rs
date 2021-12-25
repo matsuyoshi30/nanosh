@@ -80,8 +80,8 @@ impl Shell {
                 cmd.execute(self);
             }
             cmd => match process::Command::new(cmd).args(args).spawn() {
-                Ok(res) => {
-                    println!("{:?}", res);
+                Ok(mut child) => {
+                    child.wait().expect("failed to execute child process");
                 }
                 Err(err) => {
                     println!("failed to execute command: {:?}", err);
