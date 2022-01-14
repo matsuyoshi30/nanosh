@@ -1,5 +1,4 @@
 use ctrlc::set_handler;
-use dirs;
 use shlex::split;
 use std::collections::HashMap;
 use std::env;
@@ -103,7 +102,7 @@ fn main() {
     for (k, v) in env::vars() {
         envs.insert(k, v);
     }
-    let cwd = dirs::home_dir().unwrap();
+    let cwd = env::current_dir().unwrap();
     let mut shell = Shell::new(cwd, envs);
 
     println!("nanosh start");
